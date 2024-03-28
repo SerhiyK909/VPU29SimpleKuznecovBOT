@@ -1,21 +1,47 @@
+# import os
+#
+# from dotenv import load_dotenv
+#
+# load_dotenv()  # take environment variables from .env.
+#
+# print(os.getenv('TELEGRAM_TOKEN'))
+
+
+
+import os
+from dotenv import load_dotenv
 import logging
 from telegram import Update
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
-from config import telegram_bot_token
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
+
+load_dotenv()
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
+async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(f'Hello {update.effective_user.first_name}')
 
+async def question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(f'how are you')
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        await update.message.reply_text(f'perfectly')
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    message = update.message.text.lower()
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a bot, please talk to me!")
+    if 'привіт' in message:
+         reply_text = f'привіт {update.effective_user.first_name}!'
+    else:
+         reply_text = 'Я вас не розумію.'
 
+    await update.message.reply_text(reply_text)
 
-if __name__ == '__main__':
-    application = ApplicationBuilder().token(telegram_bot_token).build()
+app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
-    start_handler = CommandHandler('start', start)
-    application.add_handler(start_handler)
+app.add_handler(CommandHandler("hello", hello))
+app.add_handler(CommandHandler("question", question))
+app.add_handler(CommandHandler("start", start ))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
-    application.run_polling()
+app.run_polling()
